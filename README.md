@@ -84,6 +84,3 @@ python manage.py runserver 8180
 - leaflet.js (via CDN)
 
 ---
-
-## 📄 License
-MIT — feel free to use, fork, and modify.
