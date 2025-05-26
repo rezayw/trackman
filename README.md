@@ -1,4 +1,4 @@
-# Instagram Link Tracker (Django)
+# Trackman (Django)
 
 This project is a full-featured Instagram link tracker that:
 - Shortens and tracks Instagram links
