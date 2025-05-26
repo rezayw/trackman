@@ -7,26 +7,16 @@ class TrackerLink(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return str(self.uuid)
+        return self.original_url
 
 class ClickLog(models.Model):
-    tracker = models.ForeignKey(TrackerLink, on_delete=models.CASCADE, related_name="clicks")
-    ip = models.GenericIPAddressField()
+    tracker = models.ForeignKey(TrackerLink, on_delete=models.CASCADE, related_name='clicks')
+    ip = models.CharField(max_length=100)
     user_agent = models.TextField()
-    country = models.CharField(max_length=100)
-    region = models.CharField(max_length=100)
-    city = models.CharField(max_length=100)
-    zip_code = models.CharField(max_length=20)
-    lat = models.FloatField()
-    lon = models.FloatField()
-    timezone = models.CharField(max_length=100)
-    isp = models.CharField(max_length=255)
-    org = models.CharField(max_length=255)
-    as_info = models.CharField(max_length=255)
-    as_name = models.CharField(max_length=255)
-    is_mobile = models.BooleanField()
-    is_proxy = models.BooleanField()
+    country = models.CharField(max_length=100, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    lat = models.FloatField(null=True, blank=True)
+    lon = models.FloatField(null=True, blank=True)
+    is_mobile = models.BooleanField(default=False)
+    is_proxy = models.BooleanField(default=False)
     time = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.ip} - {self.city}, {self.country}"

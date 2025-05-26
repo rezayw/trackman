@@ -1,0 +1,18 @@
+{% extends "tracker/base.html" %}
+
+{% block content %}
+<h1>Instagram Link Tracker</h1>
+<form method="post">
+    {% csrf_token %}
+    <input type="url" name="original_url" placeholder="https://www.instagram.com/..." required>
+    <button type="submit">Create Tracker</button>
+</form>
+
+{% if tracker_link %}
+<div style="margin-top: 20px;">
+    <p>Your tracker link:</p>
+    <a href="{{ tracker_link }}" target="_blank">{{ tracker_link }}</a>
+    <p><a href="{% url 'tracker:dashboard' %}">View Dashboard</a></p>
+</div>
+{% endif %}
+{% endblock %}

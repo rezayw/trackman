@@ -1,0 +1,36 @@
+{% extends "tracker/base.html" %}
+
+{% block content %}
+<h1>Tracker Dashboard</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Original URL</th>
+            <th>Short Link</th>
+            <th>Clicks</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for tracker in trackers %}
+        <tr>
+            <td>{{ tracker.original_url }}</td>
+            <td>
+                <a href="{% url 'tracker:track_view' tracker.uuid %}" target="_blank">
+                    {{ request.scheme }}://{{ request.get_host }}/view/p/{{ tracker.uuid }}
+                </a>
+            </td>
+            <td>{{ tracker.clicks.count }}</td>
+            <td>
+                <a href="{% url 'tracker:detail' tracker.uuid %}">View Details</a> |
+                <a href="{% url 'tracker:download_pdf' tracker.uuid %}">Download PDF</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4">No trackers created yet.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

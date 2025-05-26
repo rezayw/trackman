@@ -1,0 +1,31 @@
+{% extends "tracker/base.html" %}
+
+{% block extra_css %}
+<style>
+    .click-row { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; }
+    .map-container { height: 200px; width: 100%; margin-top: 10px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>Details for: {{ tracker.original_url }}</h1>
+<a href="{% url 'tracker:dashboard' %}">← Back to Dashboard</a>
+
+{% for click in clicks %}
+<div class="click-row">
+    <p><strong>Time:</strong> {{ click.time }}</p>
+    <p><strong>IP:</strong> {{ click.ip }}</p>
+    <p><strong>Location:</strong> {{ click.city }}, {{ click.country }}</p>
+    <p><strong>Device:</strong> {% if click.is_mobile %}Mobile{% else %}Desktop{% endif %}</p>
+
+    {% if click.lat and click.lon %}
+    <div id="map-{{ click.id }}" class="map-container"
+         data-lat="{{ click.lat }}"
+         data-lon="{{ click.lon }}"
+         data-popup="{{ click.ip }} - {{ click.city }}"></div>
+    {% endif %}
+</div>
+{% empty %}
+<p>No clicks recorded yet.</p>
+{% endfor %}
+{% endblock %}

@@ -1,4 +1,4 @@
-Django>=4.2
-requests
+Django>=5.2
 python-dotenv
+requests
 reportlab
