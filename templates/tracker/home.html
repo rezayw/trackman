@@ -1,18 +1,97 @@
 {% extends "tracker/base.html" %}
 
 {% block content %}
-<h1>Instagram Link Tracker</h1>
-<form method="post">
-    {% csrf_token %}
-    <input type="url" name="original_url" placeholder="https://www.instagram.com/..." required>
-    <button type="submit">Create Tracker</button>
-</form>
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">
+            <i class="fab fa-instagram gradient-icon"></i>
+            Track Your Instagram Links
+        </h1>
+        <p class="hero-subtitle">Create trackable links to monitor clicks, locations, devices, and more</p>
+        
+        <form method="post" class="tracker-form">
+            {% csrf_token %}
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <i class="fas fa-link input-icon"></i>
+                    <input type="url" name="original_url" placeholder="Paste your Instagram URL here..." required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-bolt"></i>
+                    <span>Generate Tracker</span>
+                </button>
+            </div>
+        </form>
 
-{% if tracker_link %}
-<div style="margin-top: 20px;">
-    <p>Your tracker link:</p>
-    <a href="{{ tracker_link }}" target="_blank">{{ tracker_link }}</a>
-    <p><a href="{% url 'tracker:dashboard' %}">View Dashboard</a></p>
+        {% if tracker_link %}
+        <div class="result-card animate-in">
+            <div class="result-header">
+                <i class="fas fa-check-circle success-icon"></i>
+                <span>Your tracker link is ready!</span>
+            </div>
+            <div class="result-body">
+                <div class="link-display">
+                    <input type="text" value="{{ tracker_link }}" id="tracker-link" readonly>
+                    <button type="button" class="btn btn-secondary copy-btn" onclick="copyLink()">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <div class="result-actions">
+                    <a href="{{ tracker_link }}" target="_blank" class="btn btn-outline">
+                        <i class="fas fa-external-link-alt"></i>
+                        <span>Test Link</span>
+                    </a>
+                    <a href="{% url 'tracker:dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-chart-line"></i>
+                        <span>View Dashboard</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <h3>Location Tracking</h3>
+            <p>See city, country, and map for each click</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h3>Device Detection</h3>
+            <p>Identify mobile vs desktop users</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3>VPN/Proxy Detection</h3>
+            <p>Know when visitors use proxies</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-file-pdf"></i>
+            </div>
+            <h3>PDF Export</h3>
+            <p>Download detailed click reports</p>
+        </div>
+    </div>
 </div>
-{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyLink() {
+    const linkInput = document.getElementById('tracker-link');
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(linkInput.value);
+    showToast('Link copied to clipboard!', 'success');
+}
+</script>
 {% endblock %}

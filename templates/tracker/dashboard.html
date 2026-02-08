@@ -1,36 +1,116 @@
 {% extends "tracker/base.html" %}
 
+{% block title %}Dashboard - Trackman{% endblock %}
+
 {% block content %}
-<h1>Tracker Dashboard</h1>
-<table>
-    <thead>
-        <tr>
-            <th>Original URL</th>
-            <th>Short Link</th>
-            <th>Clicks</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for tracker in trackers %}
-        <tr>
-            <td>{{ tracker.original_url }}</td>
-            <td>
-                <a href="{% url 'tracker:track_view' tracker.uuid %}" target="_blank">
-                    {{ request.scheme }}://{{ request.get_host }}/view/p/{{ tracker.uuid }}
-                </a>
-            </td>
-            <td>{{ tracker.clicks.count }}</td>
-            <td>
-                <a href="{% url 'tracker:detail' tracker.uuid %}">View Details</a> |
-                <a href="{% url 'tracker:download_pdf' tracker.uuid %}">Download PDF</a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="4">No trackers created yet.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="dashboard-header">
+    <div class="header-content">
+        <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
+        <p class="header-subtitle">Monitor all your tracked links in one place</p>
+    </div>
+    <a href="{% url 'tracker:home' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i>
+        <span>New Tracker</span>
+    </a>
+</div>
+
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-link"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">{{ trackers|length }}</span>
+            <span class="stat-label">Total Links</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-mouse-pointer"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">{% widthratio trackers|length 1 1 as total %}{% for t in trackers %}{% with t.clicks.count as c %}{% endwith %}{% endfor %}{{ trackers|length }}</span>
+            <span class="stat-label">Active Trackers</span>
+        </div>
+    </div>
+</div>
+
+<div class="table-card">
+    <div class="table-header">
+        <h2><i class="fas fa-list"></i> Your Tracked Links</h2>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Original URL</th>
+                    <th>Tracker Link</th>
+                    <th>Clicks</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tracker in trackers %}
+                <tr>
+                    <td class="url-cell">
+                        <a href="{{ tracker.original_url }}" target="_blank" class="original-link" title="{{ tracker.original_url }}">
+                            <i class="fab fa-instagram"></i>
+                            {{ tracker.original_url|truncatechars:40 }}
+                        </a>
+                    </td>
+                    <td class="tracker-cell">
+                        <div class="tracker-link-wrapper">
+                            <code class="tracker-code">{{ request.scheme }}://{{ request.get_host }}/view/p/{{ tracker.uuid|truncatechars:12 }}...</code>
+                            <button type="button" class="btn-icon copy-btn" onclick="copyToClipboard('{{ request.scheme }}://{{ request.get_host }}/view/p/{{ tracker.uuid }}/')" title="Copy link">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="click-badge {% if tracker.clicks.count > 0 %}has-clicks{% endif %}">
+                            <i class="fas fa-mouse-pointer"></i>
+                            {{ tracker.clicks.count }}
+                        </span>
+                    </td>
+                    <td class="date-cell">
+                        <span class="date-text">{{ tracker.created_at|date:"M d, Y" }}</span>
+                        <span class="time-text">{{ tracker.created_at|time:"H:i" }}</span>
+                    </td>
+                    <td class="actions-cell">
+                        <a href="{% url 'tracker:detail' tracker.uuid %}" class="btn btn-sm btn-outline" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'tracker:download_pdf' tracker.uuid %}" class="btn btn-sm btn-secondary" title="Download PDF">
+                            <i class="fas fa-file-pdf"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="empty-state">
+                        <div class="empty-content">
+                            <i class="fas fa-inbox"></i>
+                            <h3>No trackers yet</h3>
+                            <p>Create your first tracker link to get started</p>
+                            <a href="{% url 'tracker:home' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create Tracker
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text);
+    showToast('Link copied to clipboard!', 'success');
+}
+</script>
 {% endblock %}

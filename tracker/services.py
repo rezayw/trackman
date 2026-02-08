@@ -7,8 +7,17 @@ class IPInfoService:
         if not ip or ip == '127.0.0.1':
             return {}
         try:
-            response = requests.get(f"http://ip-api.com/json/{ip}", params={'fields': '66846719'}, timeout=3)
+            response = requests.get(f"http://ip-api.com/json/{ip}", timeout=3)
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            if data.get('status') == 'success':
+                return {
+                    'country': data.get('country', ''),
+                    'city': data.get('city', ''),
+                    'lat': data.get('lat'),
+                    'lon': data.get('lon'),
+                    'proxy': data.get('proxy', False),
+                }
+            return {}
         except requests.RequestException:
             return {}
