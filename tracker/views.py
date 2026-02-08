@@ -6,7 +6,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 import io
 from .models import TrackerLink, ClickLog
-from .services import IPInfoService
+from .services import IPInfoService, UserAgentParser
 
 def home(request):
     tracker_link = None
@@ -28,9 +28,21 @@ def dashboard(request):
 def detail(request, uuid):
     tracker = get_object_or_404(TrackerLink, uuid=uuid)
     clicks = tracker.clicks.all().order_by('-time')
+    
+    # Compute stats
+    total = clicks.count()
+    mobile = clicks.filter(is_mobile=True).count()
+    stats = {
+        'total': total,
+        'mobile': mobile,
+        'desktop': total - mobile,
+        'proxy': clicks.filter(is_proxy=True).count(),
+    }
+    
     return render(request, 'tracker/detail.html', {
         'tracker': tracker,
-        'clicks': clicks
+        'clicks': clicks,
+        'stats': stats,
     })
 
 def download_pdf(request, uuid):
@@ -249,23 +261,59 @@ def download_pdf(request, uuid):
 
 def track_view(request, uuid):
     tracker = get_object_or_404(TrackerLink, uuid=uuid)
-    ip = request.META.get('REMOTE_ADDR')
+    
+    # Get client IP (handle proxies)
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR', '')
+    
     user_agent = request.META.get('HTTP_USER_AGENT', '')
-
+    referrer = request.META.get('HTTP_REFERER', '')
+    accept_language = request.META.get('HTTP_ACCEPT_LANGUAGE', '')
+    
+    # Get IP info
     ip_info = IPInfoService.get_ip_info(ip)
-    is_mobile = 'mobile' in user_agent.lower()
-    is_proxy = ip_info.get('proxy', False)
-
+    
+    # Parse user agent
+    ua_info = UserAgentParser.parse(user_agent)
+    
     ClickLog.objects.create(
         tracker=tracker,
         ip=ip,
         user_agent=user_agent,
+        
+        # Location
         country=ip_info.get('country', ''),
+        country_code=ip_info.get('country_code', ''),
+        region=ip_info.get('region', ''),
+        region_name=ip_info.get('region_name', ''),
         city=ip_info.get('city', ''),
+        zip_code=ip_info.get('zip_code', ''),
         lat=ip_info.get('lat'),
         lon=ip_info.get('lon'),
-        is_mobile=is_mobile,
-        is_proxy=is_proxy
+        timezone=ip_info.get('timezone', ''),
+        
+        # Network
+        isp=ip_info.get('isp', ''),
+        org=ip_info.get('org', ''),
+        as_number=ip_info.get('as_number', ''),
+        
+        # Device
+        is_mobile=ua_info.get('is_mobile', False),
+        is_proxy=ip_info.get('proxy', False),
+        is_hosting=ip_info.get('hosting', False),
+        browser=ua_info.get('browser', ''),
+        browser_version=ua_info.get('browser_version', ''),
+        os=ua_info.get('os', ''),
+        os_version=ua_info.get('os_version', ''),
+        device_type=ua_info.get('device_type', ''),
+        device_brand=ua_info.get('device_brand', ''),
+        
+        # Request
+        referrer=referrer if referrer else None,
+        accept_language=accept_language[:200] if accept_language else '',
     )
 
     return redirect(tracker.original_url)

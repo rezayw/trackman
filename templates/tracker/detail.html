@@ -38,20 +38,20 @@
         </div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);">
             <i class="fas fa-mobile-alt"></i>
         </div>
         <div class="stat-info">
-            <span class="stat-value">{% with mobile_count=0 %}{% for c in clicks %}{% if c.is_mobile %}{% endif %}{% endfor %}{% endwith %}{% for c in clicks %}{% if c.is_mobile %}{% endif %}{% endfor %}-</span>
+            <span class="stat-value">{{ stats.mobile }}</span>
             <span class="stat-label">Mobile</span>
         </div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
             <i class="fas fa-desktop"></i>
         </div>
         <div class="stat-info">
-            <span class="stat-value">-</span>
+            <span class="stat-value">{{ stats.desktop }}</span>
             <span class="stat-label">Desktop</span>
         </div>
     </div>
@@ -60,8 +60,8 @@
             <i class="fas fa-user-secret"></i>
         </div>
         <div class="stat-info">
-            <span class="stat-value">-</span>
-            <span class="stat-label">Using VPN/Proxy</span>
+            <span class="stat-value">{{ stats.proxy }}</span>
+            <span class="stat-label">VPN/Proxy</span>
         </div>
     </div>
 </div>
@@ -77,31 +77,153 @@
                 {{ click.time|date:"M d, Y" }} at {{ click.time|time:"H:i:s" }}
             </div>
             <div class="click-badges">
-                {% if click.is_mobile %}
-                <span class="badge badge-info"><i class="fas fa-mobile-alt"></i> Mobile</span>
-                {% else %}
-                <span class="badge badge-secondary"><i class="fas fa-desktop"></i> Desktop</span>
+                {% if click.device_type %}
+                <span class="badge {% if click.is_mobile %}badge-info{% else %}badge-secondary{% endif %}">
+                    <i class="fas fa-{% if click.is_mobile %}mobile-alt{% else %}desktop{% endif %}"></i> 
+                    {{ click.device_type }}
+                </span>
                 {% endif %}
                 {% if click.is_proxy %}
                 <span class="badge badge-warning"><i class="fas fa-user-secret"></i> VPN/Proxy</span>
+                {% endif %}
+                {% if click.is_hosting %}
+                <span class="badge badge-danger"><i class="fas fa-server"></i> Hosting/DC</span>
                 {% endif %}
             </div>
         </div>
         
         <div class="click-body">
-            <div class="click-info">
-                <div class="info-row">
-                    <span class="info-label"><i class="fas fa-network-wired"></i> IP Address</span>
-                    <span class="info-value">{{ click.ip }}</span>
+            <div class="click-details-grid">
+                <!-- Location Section -->
+                <div class="detail-section">
+                    <h4><i class="fas fa-map-marker-alt"></i> Location</h4>
+                    <div class="detail-items">
+                        <div class="detail-item">
+                            <span class="detail-label">IP Address</span>
+                            <span class="detail-value">{{ click.ip }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Country</span>
+                            <span class="detail-value">
+                                {% if click.country_code %}
+                                <img src="https://flagcdn.com/16x12/{{ click.country_code|lower }}.png" alt="" class="flag-icon">
+                                {% endif %}
+                                {{ click.country|default:"Unknown" }}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Region</span>
+                            <span class="detail-value">{{ click.region_name|default:"-" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">City</span>
+                            <span class="detail-value">{{ click.city|default:"-" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">ZIP Code</span>
+                            <span class="detail-value">{{ click.zip_code|default:"-" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Timezone</span>
+                            <span class="detail-value">{{ click.timezone|default:"-" }}</span>
+                        </div>
+                        {% if click.lat and click.lon %}
+                        <div class="detail-item">
+                            <span class="detail-label">Coordinates</span>
+                            <span class="detail-value">{{ click.lat }}, {{ click.lon }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
-                <div class="info-row">
-                    <span class="info-label"><i class="fas fa-map-marker-alt"></i> Location</span>
-                    <span class="info-value">{% if click.city %}{{ click.city }}, {% endif %}{{ click.country|default:"Unknown" }}</span>
+                
+                <!-- Network Section -->
+                <div class="detail-section">
+                    <h4><i class="fas fa-network-wired"></i> Network</h4>
+                    <div class="detail-items">
+                        <div class="detail-item">
+                            <span class="detail-label">ISP</span>
+                            <span class="detail-value">{{ click.isp|default:"-" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Organization</span>
+                            <span class="detail-value">{{ click.org|default:"-" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">AS Number</span>
+                            <span class="detail-value code">{{ click.as_number|default:"-" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">VPN/Proxy</span>
+                            <span class="detail-value">
+                                {% if click.is_proxy %}
+                                <span class="status-badge status-warning">Yes</span>
+                                {% else %}
+                                <span class="status-badge status-success">No</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Hosting/Datacenter</span>
+                            <span class="detail-value">
+                                {% if click.is_hosting %}
+                                <span class="status-badge status-warning">Yes</span>
+                                {% else %}
+                                <span class="status-badge status-success">No</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <div class="info-row">
-                    <span class="info-label"><i class="fas fa-globe"></i> User Agent</span>
-                    <span class="info-value user-agent">{{ click.user_agent|truncatechars:80 }}</span>
+                
+                <!-- Device Section -->
+                <div class="detail-section">
+                    <h4><i class="fas fa-laptop"></i> Device & Browser</h4>
+                    <div class="detail-items">
+                        <div class="detail-item">
+                            <span class="detail-label">Device Type</span>
+                            <span class="detail-value">
+                                <i class="fas fa-{% if click.is_mobile %}mobile-alt{% elif click.device_type == 'Tablet' %}tablet-alt{% else %}desktop{% endif %}"></i>
+                                {{ click.device_type|default:"Unknown" }}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Device Brand</span>
+                            <span class="detail-value">{{ click.device_brand|default:"-" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Browser</span>
+                            <span class="detail-value">
+                                {% if click.browser %}
+                                {{ click.browser }}{% if click.browser_version %} {{ click.browser_version }}{% endif %}
+                                {% else %}-{% endif %}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Operating System</span>
+                            <span class="detail-value">
+                                {% if click.os %}
+                                {{ click.os }}{% if click.os_version %} {{ click.os_version }}{% endif %}
+                                {% else %}-{% endif %}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Language</span>
+                            <span class="detail-value code">{{ click.accept_language|default:"-"|truncatechars:30 }}</span>
+                        </div>
+                        {% if click.referrer %}
+                        <div class="detail-item">
+                            <span class="detail-label">Referrer</span>
+                            <span class="detail-value code">{{ click.referrer|truncatechars:40 }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
+            </div>
+            
+            <!-- User Agent -->
+            <div class="user-agent-section">
+                <h4><i class="fas fa-code"></i> Raw User Agent</h4>
+                <code class="user-agent-code">{{ click.user_agent }}</code>
             </div>
             
             {% if click.lat and click.lon %}
@@ -109,7 +231,7 @@
                 <div id="map-{{ click.id }}" class="map-container"
                      data-lat="{{ click.lat }}"
                      data-lon="{{ click.lon }}"
-                     data-popup="<strong>{{ click.ip }}</strong><br>{{ click.city }}, {{ click.country }}"></div>
+                     data-popup="<strong>{{ click.ip }}</strong><br>{{ click.city }}, {{ click.country }}<br>{{ click.isp }}"></div>
             </div>
             {% endif %}
         </div>
